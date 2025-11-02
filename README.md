@@ -1,4 +1,4 @@
-# AI Blockchain Shard Simulator
+# A Simulator for Blockchain Sharding
 
 该项目旨在利用大语言模型（LLM）构建一个区块链分片系统，以提升区块链的可扩展性和效率。
 
