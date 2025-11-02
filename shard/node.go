@@ -32,6 +32,16 @@ func (n *Node) GenerateSampleTransactions(count int) []*core.Transaction {
 	
 	rand.Seed(time.Now().UnixNano())
 	
+	// 获取最大分片ID，用于生成有效的跨分片交易
+	maxShardID := n.ShardID
+	if globalNetwork != nil {
+		for shardID := range globalNetwork.Shards {
+			if shardID > maxShardID {
+				maxShardID = shardID
+			}
+		}
+	}
+	
 	for i := 0; i < count; i++ {
 		// 随机生成发送方和接收方
 		from := fmt.Sprintf("account_%d", rand.Intn(1000))
@@ -48,8 +58,12 @@ func (n *Node) GenerateSampleTransactions(count int) []*core.Transaction {
 		toShard := n.ShardID
 		
 		// 有一定概率生成跨分片交易
-		if rand.Float32() < 0.3 { // 30%概率生成跨分片交易
-			toShard = (toShard + 1) % 4 // 假设有4个分片
+		if rand.Float32() < 0.3 && maxShardID > 0 { // 30%概率生成跨分片交易
+			// 确保目标分片与当前分片不同
+			toShard = uint64(rand.Int63n(int64(maxShardID + 1)))
+			for toShard == fromShard && maxShardID > 0 {
+				toShard = uint64(rand.Int63n(int64(maxShardID + 1)))
+			}
 		}
 		
 		tx := core.NewTransaction(from, to, amount, nonce, fromShard, toShard)
@@ -88,4 +102,12 @@ func (n *Node) PrintStatus() {
 	fmt.Printf("Pending transactions: %d\n", n.Blockchain.TxPool.PendingCount())
 	fmt.Printf("Relay transactions: %d\n", n.Blockchain.TxPool.RelayCount())
 	fmt.Println("---")
+}
+
+// 全局网络变量，用于在节点中访问网络信息
+var globalNetwork *Network
+
+// SetGlobalNetwork 设置全局网络变量
+func SetGlobalNetwork(network *Network) {
+	globalNetwork = network
 }

@@ -41,7 +41,7 @@ func (n *Network) GetAllShards() []uint64 {
 // BroadcastTransaction 广播交易到指定分片
 func (n *Network) BroadcastTransaction(tx *core.Transaction, shardID uint64) {
 	nodes := n.Shards[shardID]
-	if nodes == nil {
+	if nodes == nil || len(nodes) == 0 {
 		fmt.Printf("No nodes found in shard %d\n", shardID)
 		return
 	}
